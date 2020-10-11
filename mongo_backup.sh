@@ -12,7 +12,7 @@ BACKUP_NAME=$DATE.gz
 echo "Start dump MongoDB database : $DATE"
 mongodump --host $HOST --port $PORT -u $USER -p $PASSWD --authenticationDatabase $DATABASE -o $OUTPUT_FOLDER/dump
 echo "Tar dump folder"
-tar -czvf $BACKUP_NAME $OUTPUT_FOLDER/dump
+tar -czvf $OUTPUT_FOLDER/$BACKUP_NAME $OUTPUT_FOLDER/dump
 echo "Remove dump folder"
 rm -rf $OUTPUT_FOLDER/dump
 echo "End dump MongoDB database : $DATE"
