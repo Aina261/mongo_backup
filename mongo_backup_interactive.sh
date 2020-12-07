@@ -19,6 +19,10 @@ else
 fi
 # Ask for output folder
 read -rep "Enter the absolute path of your output archive of your mongodb backup : " _OUTPUT_FOLDER
+if ! [ "${_OUTPUT_FOLDER: -1}" = "/" ]; then
+    _OUTPUT_FOLDER=$_OUTPUT_FOLDER/
+fi
+
 # Test if output folder exist
 if [ ! -d "$_OUTPUT_FOLDER" ]; then
   read -rep "Your output folder path '$_OUTPUT_FOLDER' doesn't exist, do you want to create it ? (y,n) : " _CREATE_FOLDER
@@ -51,6 +55,14 @@ read -rep "How many days do you want to keep the archives : " _RETENTION_DAY
 echo "Define when the cron should be activated"
 read -rep "( '*/1' is for run each hours, '1' is for run at 1am ) : " _CRON_HOUR
 
+# Check if all variable is defined
+if [ -z "$_HOST" ] || [ -z "$_PORT" ] || [ -z "$_DB_NAME" ] || [ -z "$_USERNAME" ] || [ -z "$_PASSWORD" ] || [ -z "$_RETENTION_DAY" ] || [ -z "$_CRON_HOUR" ]; then
+  echo -e "\e[91mMmmh, some variables seems to be not configured,\e[0m"
+  echo -e "\e[91mYou must answer to all requests,\e[0m"
+  echo -e "\e[91mOtherwise the backup will not work\e[0m"
+  exit
+fi
+
 # Mkdir folder
 mkdir -p /etc/mongodb_backup
 
@@ -58,23 +70,17 @@ mkdir -p /etc/mongodb_backup
 cat > /etc/mongodb_backup/"$_FILENAME" <<- EOM
 #!/bin/bash
 
-HOST="$_HOST"
-PORT="$_PORT"
-USER="$_USERNAME"
-DATABASE="$_DB_NAME"
-PASSWD="$_PASSWORD"
-OUTPUT_FOLDER="$_OUTPUT_FOLDER"
 DATE=\$(date +%d-%m-%Y_%H-%M-%S)
-BACKUP_NAME=\$DATE.gz
 
-echo "Start dump MongoDB database : $DATE"
-mongodump --host "\$HOST" --port "\$PORT" -u "\$USER" -p "\$PASSWD" --authenticationDatabase "\$DATABASE" -o "\$OUTPUT_FOLDER"
+echo ""
+echo -e "\e[32mStart dump MongoDB database : \$DATE \e[0m"
+mongodump --host $_HOST --port $_PORT -u $_USERNAME -p $_PASSWORD --authenticationDatabase $_DB_NAME -o "${_OUTPUT_FOLDER}dump"
 echo "Tar dump folder"
-tar -czvf \$BACKUP_NAME \$OUTPUT_FOLDER/dump
+tar -czf "${_OUTPUT_FOLDER}mongodump_"\$DATE".tar.gz" ${_OUTPUT_FOLDER}dump
 echo "Remove dump folder"
-rm -rf \$OUTPUT_FOLDER/dump
-echo "End dump MongoDB database : $DATE"
-find \$OUTPUT_FOLDER -mindepth 1 -mtime +$_RETENTION_DAY -delete
+rm -rf ${_OUTPUT_FOLDER}dump
+echo -e "\e[32mEnd dump MongoDB database : \$DATE \e[0m"
+find $_OUTPUT_FOLDER -mindepth 1 -mtime +$_RETENTION_DAY -delete
 EOM
 
 # Change mod to executable
@@ -83,7 +89,7 @@ chmod +x /etc/mongodb_backup/
 cat > /etc/cron.d/mongodb_backup <<- EOM
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-0 $_CRON_HOUR * * *   /etc/mongodb_backup/$_FILENAME > /var/log/mongodb_backup.log 2>&1
+0 $_CRON_HOUR * * * root /etc/mongodb_backup/$_FILENAME >> /var/log/mongodb_backup.log 2>&1
 EOM
 
 echo -e "\e[32mMongodb_backup file was successfully generated /etc/mongodb_backup/$_FILENAME\e[0m"
