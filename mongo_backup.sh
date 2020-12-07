@@ -1,18 +1,18 @@
 #!/bin/bash
 
-HOST=192.168.1.113
-PORT=27017
-USER=admin
+HOST="sqdgfhdqsh"
+PORT="sqdfgh654sdh"
+USER="hsdg6fh54sdfg"
 DATABASE=admin
-PASSWD=zqoN602sxsWtc71MF3IFpg08xFS7rUNliJSPsmwVHtN2UP7LLTGAiOjhnTPEOuLdSPFvXJhj1nkmin37i97X7nH9j71IcM4Tju4
+PASSWD="sh6dfg54hs"
 OUTPUT_FOLDER=/mnt/backup/mongo
-DATE=$(date +%d-%m-%Y_%H-%M-%S)
-BACKUP_NAME=$DATE.gz
+DATE=07-12-2020_06-08-43
+BACKUP_NAME=.gz
 
-echo "Start dump MongoDB database : $DATE"
-mongodump --host $HOST --port $PORT -u $USER -p $PASSWD --authenticationDatabase $DATABASE -o $OUTPUT_FOLDER/dump
+echo "Start dump MongoDB database : "
+mongodump --host  --port  -u root -p  --authenticationDatabase  -o /dump
 echo "Tar dump folder"
-tar -czvf $OUTPUT_FOLDER/$BACKUP_NAME $OUTPUT_FOLDER/dump
+tar -czvf  /dump
 echo "Remove dump folder"
-rm -rf $OUTPUT_FOLDER/dump
-echo "End dump MongoDB database : $DATE"
+rm -rf /dump
+echo "End dump MongoDB database : "
