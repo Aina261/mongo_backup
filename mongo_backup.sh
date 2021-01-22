@@ -1,5 +1,12 @@
 #!/bin/bash
-echo "\e[32m"
+
+# USAGE
+# To get and run this script
+# sudo  sh -c "$(curl -fsSl https://raw.githubusercontent.com/Aina261/mongo_backup/main/mongo_backup.sh)"
+# You need to run it with sudo
+# MongoDB need to be installed on the machine where you run this script
+
+printf "\e[32m"
 cat << EOF
                   • ▌ ▄ ·.        ▐ ▄  ▄▄ •       ·▄▄▄▄  ▄▄▄▄·     ▄▄▄▄·  ▄▄▄·  ▄▄· ▄ •▄ ▄• ▄▌ ▄▄▄·
                   ·██ ▐███▪▪     •█▌▐█▐█ ▀ ▪▪     ██▪ ██ ▐█ ▀█▪    ▐█ ▀█▪▐█ ▀█ ▐█ ▌▪█▌▄▌▪█▪██▌▐█ ▄█
@@ -7,26 +14,32 @@ cat << EOF
                   ██ ██▌▐█▌▐█▌.▐▌██▐█▌▐█▄▪▐█▐█▌.▐▌██. ██ ██▄▪▐█    ██▄▪▐█▐█ ▪▐▌▐███▌▐█.█▌▐█▄█▌▐█▪·•
                   ▀▀  █▪▀▀▀ ▀█▄▀▪▀▀ █▪·▀▀▀▀  ▀█▄▀▪▀▀▀▀▀• ·▀▀▀▀     ·▀▀▀▀  ▀  ▀ ·▀▀▀ ·▀  ▀ ▀▀▀ .▀
 EOF
-echo "\e[0m"
+printf "\e[0m"
 
-echo "Let's verify if the script is run as root"
+printf "Let's verify if the script is run as root"
+echo ""
 # Test if the script is run with sudo
 if ! [ $(id -u) = 0 ]; then
-  echo "Please run the script as root"
+  printf "Please run the script as root"
   exit 1
 else
-  echo "\e[32mYeah, it's ok\e[0m"
+  printf "\e[32mYeah, it's ok\e[0m"
+  echo ""
 fi
 
-echo "Now, verify if mongodb is installed"
+printf "Now, verify if mongodb is installed"
+echo ""
 # Check if mongodb is installed
 if [ ! -x "$(command -v mongo)" ]; then
-  echo "\e[91mMongoDB is not installed on your machine\e[0m"
-  echo "You need to have MongoDB installed for dump and backup your DB"
-  echo "Please, install it before run this script"
-  exit
+  printf "\e[91mMongoDB is not installed on your machine\e[0m"
+  echo ""
+  printf "You need to have MongoDB installed for dump and backup your DB"
+  echo ""
+  printf "Please, install it before run this script"
+  exit 1
 else
-  echo "\e[32mGreat, mongoDB is installed\e[0m"
+  printf "\e[32mGreat, mongoDB is installed\e[0m"
+  echo ""
 fi
 
 # Function for create script
@@ -44,14 +57,14 @@ do_backup_script() {
   # Ask for retention day's number
   read -rp "How many days do you want to keep the archives : " _RETENTION_DAY
   # Ask for the time to activate the cron
-  echo "Define when the cron should be activated"
+  printf "Define when the cron should be activated"
   read -rp "( '*/1' is for run each hours, '1' is for run at 1am ) : " _CRON_HOUR
 
   # Check if all variable is defined
   if [ -z "$_HOST" ] || [ -z "$_PORT" ] || [ -z "$_DB_NAME" ] || [ -z "$_USERNAME" ] || [ -z "$_PASSWORD" ] || [ -z "$_RETENTION_DAY" ] || [ -z "$_CRON_HOUR" ]; then
-    echo "\e[91mMmmh, some variables seems to be not configured,\e[0m"
-    echo "\e[91mYou must answer to all requests,\e[0m"
-    echo "\e[91mOtherwise the backup will not work\e[0m"
+    printf "\e[91mMmmh, some variables seems to be not configured,\e[0m"
+    printf "\e[91mYou must answer to all requests,\e[0m"
+    printf "\e[91mOtherwise the backup will not work\e[0m"
     exit
   fi
 
@@ -89,35 +102,34 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 0 $_CRON_HOUR * * * root /etc/mongodb_backup/mongodb_backup_$_DB_NAME.sh >> /var/log/mongodb_backup.log 2>&1
 EOM
 
-  echo "\e[32mMongodb_backup file was successfully generated /etc/mongodb_backup/mongodb_backup_${_DB_NAME}.sh\e[0m"
-  echo "\e[32mCron was successfully added : /etc/cron.d/mongodb_backup_${_DB_NAME}\e[0m"
+  echo ""
+  printf "\e[32mThanks using MongoDB backup generator\e[0m"
+  echo ""
+  printf "Mongodb_backup file was successfully generated /etc/mongodb_backup/mongodb_backup_${_DB_NAME}.sh"
+  echo ""
+  printf "Cron was successfully added : /etc/cron.d/mongodb_backup_${_DB_NAME}"
+  echo ""
+  printf "Logs '/var/log/mongodb_backup.log'"
+  echo ""
+  printf "Backup folder '/var/backups/mongodb_backup'"
 }
 
-# Ask for how many db to backup
-echo ""
-read -rp "How many MongoDB database do you want to backup : " _NUMBER_OF_DB_TO_BACKUP
+## Ask for how many db to backup
+#printf ""
+#read -rp "How many MongoDB database do you want to backup : " _NUMBER_OF_DB_TO_BACKUP
 
 # Test if output folder exist and create it if not
 if [ ! -d /var/backups/mongodb_backup ]; then
   mkdir -p /var/backups/mongodb_backup
 fi
-
-# Loop on the number of db to backup
-#for i in {1..$_NUMBER_OF_DB_TO_BACKUP}; do
+#
+#COUNTER=1
+#while [ $COUNTER -le "$_NUMBER_OF_DB_TO_BACKUP" ]; do
 #  echo ""
-#  echo "Please answer all questions"
-#  do_backup_script
+#  printf "** Please answer to all questions **"
+#  echo ""
+#
+#  ((COUNTER++))
 #done
 
-COUNTER=1
-while [ $COUNTER -le "$_NUMBER_OF_DB_TO_BACKUP" ]; do
-  echo ""
-  echo "Let's go for DB backup number: $COUNTER"
-  echo "** Please answer to all questions **"
-  do_backup_script
-  ((COUNTER++))
-done
-
-echo ""
-echo "Thanks using MongoDB backup generator"
-echo "You can see backup logs here '/var/log/mongodb_backup.log'"
+do_backup_script
